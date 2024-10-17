@@ -2,43 +2,57 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>오디오 출력 선택</title>
+    <title>AudioContext setSinkId() Demo</title>
 </head>
 <body>
+    <h1>오디오 출력 디바이스 선택 및 재생</h1>
     <select id="outputDevices"></select>
     <button id="playButton">재생</button>
 
+    <audio id="audioPlayer" controls>
+        <source src="https://raw.githubusercontent.com/ellen24k/ellen24k/main/snd_bg.wav" type="audio/wav">
+        Your browser does not support the audio element.
+    </audio>
+
     <script>
-        const audio = new Audio('https://raw.githubusercontent.com/ellen24k/ellen24k/main/snd_bg.wav');
+        const audioPlayer = document.getElementById('audioPlayer');
         const outputSelect = document.getElementById('outputDevices');
 
         async function getOutputDevices() {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            devices.forEach(device => {
-                if (device.kind === 'audiooutput') {
-                    const option = document.createElement('option');
-                    option.value = device.deviceId;
-                    option.text = device.label || `Output Device ${outputSelect.length + 1}`;
-                    outputSelect.appendChild(option);
-                }
-            });
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                devices.forEach(device => {
+                    if (device.kind === 'audiooutput') {
+                        const option = document.createElement('option');
+                        option.value = device.deviceId;
+                        option.text = device.label || `Output Device ${outputSelect.length + 1}`;
+                        outputSelect.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('디바이스 가져오기 오류:', error);
+            }
         }
 
-        outputSelect.addEventListener('change', () => {
+        outputSelect.addEventListener('change', async () => {
             const selectedDevice = outputSelect.value;
-            audio.setSinkId(selectedDevice)
-                .then(() => {
-                    console.log(`Output device set to ${selectedDevice}`);
-                })
-                .catch(error => {
-                    console.error('Error setting output device:', error);
-                });
+            const audioContext = new AudioContext();
+            const source = audioContext.createMediaElementSource(audioPlayer);
+
+            source.connect(audioContext.destination);
+            try {
+                await audioPlayer.setSinkId(selectedDevice);
+                console.log(`출력 디바이스가 ${selectedDevice}로 설정되었습니다.`);
+            } catch (error) {
+                console.error('출력 디바이스 설정 오류:', error);
+            }
         });
 
         document.getElementById('playButton').addEventListener('click', () => {
-            audio.play();
+            audioPlayer.play();
         });
 
+        // 디바이스 목록 가져오기
         getOutputDevices();
     </script>
 </body>
