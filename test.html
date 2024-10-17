@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>오디오 출력 선택</title>
+</head>
+<body>
+    <select id="outputDevices"></select>
+    <button id="playButton">재생</button>
+
+    <script>
+        const audio = new Audio('https://raw.githubusercontent.com/ellen24k/ellen24k/main/snd_bg.wav');
+        const outputSelect = document.getElementById('outputDevices');
+
+        async function getOutputDevices() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            devices.forEach(device => {
+                if (device.kind === 'audiooutput') {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.text = device.label || `Output Device ${outputSelect.length + 1}`;
+                    outputSelect.appendChild(option);
+                }
+            });
+        }
+
+        outputSelect.addEventListener('change', () => {
+            const selectedDevice = outputSelect.value;
+            audio.setSinkId(selectedDevice)
+                .then(() => {
+                    console.log(`Output device set to ${selectedDevice}`);
+                })
+                .catch(error => {
+                    console.error('Error setting output device:', error);
+                });
+        });
+
+        document.getElementById('playButton').addEventListener('click', () => {
+            audio.play();
+        });
+
+        getOutputDevices();
+    </script>
+</body>
+</html>
