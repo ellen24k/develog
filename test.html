@@ -1,55 +1,47 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>출력 디바이스 선택</title>
-</head>
-<body>
-    <h1>오디오 출력 디바이스 선택</h1>
-    <select id="outputDevices"></select>
-    <button id="playButton">재생</button>
+async function playAudioFromUrl(url, deviceId) {
+    try {
+        // AudioContext 생성
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // 오디오 버퍼를 가져오기
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-    <audio id="audioPlayer" controls>
-        <source src="https://raw.githubusercontent.com/ellen24k/ellen24k/main/snd_bg.wav" type="audio/wav">
-        Your browser does not support the audio element.
-    </audio>
+        // 소스 생성
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
 
-    <script>
-        const audioPlayer = document.getElementById('audioPlayer');
-        const outputSelect = document.getElementById('outputDevices');
+        // 소스와 오디오 출력 장치 연결
+        const destination = audioContext.createMediaStreamDestination();
+        source.connect(destination);
+        source.start(0);
 
-        async function getOutputDevices() {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                devices.forEach(device => {
-                    if (device.kind === 'audiooutput') {
-                        const option = document.createElement('option');
-                        option.value = device.deviceId;
-                        option.text = device.label || `Output Device ${outputSelect.length + 1}`;
-                        outputSelect.appendChild(option);
-                    }
-                });
-            } catch (error) {
-                console.error('디바이스 가져오기 오류:', error);
-            }
-        }
+        // Sink ID를 설정하여 특정 출력 장치에서 재생
+        await audioContext.setSinkId(deviceId);
+        
+        // MediaStream을 소스에 연결
+        const mediaStream = destination.stream;
+        const mediaStreamSource = audioContext.createMediaStreamSource(mediaStream);
+        mediaStreamSource.connect(audioContext.destination);
 
-        outputSelect.addEventListener('change', async () => {
-            const selectedDevice = outputSelect.value;
-            try {
-                await audioPlayer.setSinkId(selectedDevice);
-                console.log(`출력 디바이스가 ${selectedDevice}로 설정되었습니다.`);
-            } catch (error) {
-                console.error('출력 디바이스 설정 오류:', error);
-            }
-        });
+        console.log('Audio is playing on device:', deviceId);
+    } catch (error) {
+        console.error('Error playing audio:', error);
+    }
+}
 
-        document.getElementById('playButton').addEventListener('click', () => {
-            audioPlayer.play();
-        });
+// 사용 예시
+async function startPlaying() {
+    const devices = await getAudioOutputDevices();
+    
+    if (devices.length > 0) {
+        const selectedDeviceId = devices[0].deviceId; // 첫 번째 장치 선택
+        await playAudioFromUrl('https://raw.githubusercontent.com/ellen24k/ellen24k/main/snd_bg.wav', selectedDeviceId);
+    } else {
+        console.log('No audio output devices found.');
+    }
+}
 
-        // 디바이스 목록 가져오기
-        getOutputDevices();
-    </script>
-</body>
-</html>
+// 시작 함수 호출
+startPlaying();
