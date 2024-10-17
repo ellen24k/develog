@@ -2,12 +2,12 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>오디오 출력 디바이스 선택</title>
+    <title>Audio Output Device Selector</title>
 </head>
 <body>
-    <h1>출력 디바이스 선택 및 오디오 재생</h1>
+    <h1>Choose Audio Output Device</h1>
     <select id="outputDevices"></select>
-    <button id="playButton">재생</button>
+    <button id="playButton">Play</button>
 
     <audio id="audioPlayer" controls>
         <source src="https://raw.githubusercontent.com/ellen24k/ellen24k/main/snd_bg.wav" type="audio/wav">
@@ -19,28 +19,24 @@
         const outputSelect = document.getElementById('outputDevices');
 
         async function getOutputDevices() {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                devices.forEach(device => {
-                    if (device.kind === 'audiooutput') {
-                        const option = document.createElement('option');
-                        option.value = device.deviceId;
-                        option.text = device.label || `Output Device ${outputSelect.length + 1}`;
-                        outputSelect.appendChild(option);
-                    }
-                });
-            } catch (error) {
-                console.error('디바이스 가져오기 오류:', error);
-            }
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            devices.forEach(device => {
+                if (device.kind === 'audiooutput') {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.text = device.label || `Output Device ${outputSelect.length + 1}`;
+                    outputSelect.appendChild(option);
+                }
+            });
         }
 
         outputSelect.addEventListener('change', async () => {
             const selectedDevice = outputSelect.value;
             try {
                 await audioPlayer.setSinkId(selectedDevice);
-                console.log(`출력 디바이스가 ${selectedDevice}로 설정되었습니다.`);
+                console.log(`Output device set to: ${selectedDevice}`);
             } catch (error) {
-                console.error('출력 디바이스 설정 오류:', error);
+                console.error('Error setting output device:', error);
             }
         });
 
@@ -48,7 +44,7 @@
             audioPlayer.play();
         });
 
-        // 디바이스 목록 가져오기
+        // Get the output devices
         getOutputDevices();
     </script>
 </body>
