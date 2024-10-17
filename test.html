@@ -2,10 +2,10 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>AudioContext setSinkId() Demo</title>
+    <title>오디오 출력 디바이스 선택</title>
 </head>
 <body>
-    <h1>오디오 출력 디바이스 선택 및 재생</h1>
+    <h1>출력 디바이스 선택 및 오디오 재생</h1>
     <select id="outputDevices"></select>
     <button id="playButton">재생</button>
 
@@ -36,10 +36,6 @@
 
         outputSelect.addEventListener('change', async () => {
             const selectedDevice = outputSelect.value;
-            const audioContext = new AudioContext();
-            const source = audioContext.createMediaElementSource(audioPlayer);
-
-            source.connect(audioContext.destination);
             try {
                 await audioPlayer.setSinkId(selectedDevice);
                 console.log(`출력 디바이스가 ${selectedDevice}로 설정되었습니다.`);
